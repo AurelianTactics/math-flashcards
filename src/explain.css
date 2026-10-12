@@ -1,0 +1,58 @@
+/* Explanations shown after a wrong answer */
+.explain { display: flex; flex-direction: column; align-items: center; gap: 14px; width: 100%; }
+.explain-row { display: flex; align-items: center; justify-content: center; gap: 18px; flex-wrap: wrap; }
+.explain-op { font-size: 2.2rem; color: var(--ink-soft); }
+.explain-text { margin: 0; font-size: 1.25rem; text-align: center; max-width: 36em; }
+
+.dots { display: flex; flex-wrap: wrap; gap: 8px; max-width: 5 * 36px; width: 212px; justify-content: flex-start; }
+.dot { width: 36px; height: 36px; border-radius: 50%; display: inline-block; position: relative; border: 2px solid rgba(31, 42, 68, 0.15); }
+.dot-crossed { opacity: 0.35; }
+.dot-crossed::before, .dot-crossed::after {
+  content: ''; position: absolute; left: 50%; top: 50%; width: 120%; height: 4px;
+  background: var(--wrong); border-radius: 2px; transform: translate(-50%, -50%) rotate(45deg);
+}
+.dot-crossed::after { transform: translate(-50%, -50%) rotate(-45deg); }
+
+.explain-blocks { align-items: flex-end; }
+.block-group { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.block-label { font-size: 1rem; color: var(--ink-soft); }
+
+.worked { display: flex; gap: 28px; align-items: center; flex-wrap: wrap; justify-content: center; }
+.worked-grid {
+  display: grid; grid-template-columns: repeat(3, 2.2rem); grid-template-rows: 1.4rem 2.4rem 2.4rem 0.8rem 2.4rem;
+  font-size: 2rem; font-weight: 600; line-height: 1; text-align: center; align-items: center;
+}
+.worked-carry { font-size: 1.1rem; color: var(--blue); align-self: end; }
+.worked-rule { height: 3px; background: var(--ink); align-self: center; grid-row: 4; }
+.worked-answer { color: var(--teal); }
+.worked-steps { margin: 0; padding-left: 1.3em; font-size: 1.15rem; max-width: 30em; }
+.worked-steps li { margin: 4px 0; }
+
+/* Celebration */
+.celebration { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 10; }
+.confetti {
+  position: absolute; top: 40%; display: block;
+  animation: confetti 1100ms cubic-bezier(.2,.8,.4,1) forwards;
+}
+.confetti-circle { border-radius: 50%; }
+@keyframes confetti {
+  0% { transform: translate(0, 0) rotate(0); opacity: 1; }
+  100% { transform: translate(var(--dx), 45vh) rotate(var(--rot)); opacity: 0; }
+}
+.cheer {
+  position: absolute; left: 50%; top: 22%; transform: translateX(-50%);
+  font-size: 3.2rem; font-weight: 700; color: var(--teal);
+  text-shadow: 3px 3px 0 #fff;
+  animation: cheer 1300ms ease-out forwards;
+}
+@keyframes cheer {
+  0% { transform: translateX(-50%) scale(0.6); opacity: 0; }
+  20% { transform: translateX(-50%) scale(1.1); opacity: 1; }
+  80% { opacity: 1; }
+  100% { transform: translateX(-50%) scale(1) translateY(-20px); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .confetti { animation: none; display: none; }
+  .cheer { animation: cheerStill 1300ms forwards; }
+  @keyframes cheerStill { 0%, 80% { opacity: 1; } 100% { opacity: 0; } }
+}
