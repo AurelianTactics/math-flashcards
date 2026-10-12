@@ -24,6 +24,11 @@ npm run dev
 ```
 
 Open the printed localhost URL. Type digits on the keyboard; Enter submits or moves to the next card.
+Choice cards take the number keys (1–4) or the symbol itself (`<`, `>`, `=`, `!`).
+
+To drill one kind of card, pick a practice focus in Settings or open a link such as
+`http://localhost:5173/?only=sub` (`add`, `sub`, `compare`, `fraction`, `sequence`, `numberLine`,
+`numberGrid`, `missing`).
 
 ## Progress data
 

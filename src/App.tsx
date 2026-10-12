@@ -1,13 +1,29 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { StoreProvider } from './hooks/useStore'
 import { SessionView } from './components/SessionView'
-import type { CardType } from './types'
+import { StatsPage } from './components/StatsPage'
+import { SettingsPage } from './components/SettingsPage'
+import { CARD_TYPES, type CardType } from './types'
 
 type View = 'play' | 'stats' | 'settings'
 
+function onlyFromUrl(): CardType | null {
+  const v = new URLSearchParams(window.location.search).get('only')
+  return v && CARD_TYPES.includes(v as CardType) ? (v as CardType) : null
+}
+
 export default function App() {
   const [view, setView] = useState<View>('play')
-  const only = (new URLSearchParams(window.location.search).get('only') as CardType | null) ?? null
+  const [only, setOnly] = useState<CardType | null>(onlyFromUrl)
+
+  // Keep ?only= in the address bar so a focused practice link can be bookmarked.
+  useEffect(() => {
+    const url = new URL(window.location.href)
+    if (only) url.searchParams.set('only', only)
+    else url.searchParams.delete('only')
+    window.history.replaceState(null, '', url)
+  }, [only])
+
   return (
     <StoreProvider>
       <div className="app">
@@ -29,8 +45,8 @@ export default function App() {
         </nav>
         <main className="main">
           {view === 'play' && <SessionView only={only} />}
-          {view === 'stats' && <p className="soon">Progress page is coming next.</p>}
-          {view === 'settings' && <p className="soon">Settings are coming next.</p>}
+          {view === 'stats' && <StatsPage />}
+          {view === 'settings' && <SettingsPage only={only} setOnly={setOnly} />}
         </main>
       </div>
     </StoreProvider>
