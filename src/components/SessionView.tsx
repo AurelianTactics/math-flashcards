@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { CARD_TYPES, type CardType, type Problem, type Settings, type StepResult } from '../types'
+import type { CardType, Problem, StepResult, Store } from '../types'
+import { onlyTypeWeights } from '../scheduler/focus'
 import { useStore } from '../hooks/useStore'
 import { useKeyboard, type KeyEvent } from '../hooks/useKeyboard'
 import { createRng } from '../rng'
@@ -17,31 +18,31 @@ type Phase = 'answering' | 'revealing' | 'correct' | 'wrong'
 const REVEAL_MS = 900
 const CORRECT_MS = 1400
 
-/** Optional focus on one card type, e.g. from the practice picker or ?only=compare. */
-export function onlyTypeWeights(only: CardType | null | undefined): Settings['typeWeights'] | undefined {
-  if (!only || !CARD_TYPES.includes(only)) return undefined
-  return Object.fromEntries(CARD_TYPES.map((t) => [t, t === only ? 1 : 0])) as Settings['typeWeights']
-}
-
 export function SessionView({ only }: { only?: CardType | null }) {
   const { store, sessionId, appendAttempt } = useStore()
   const rng = useMemo(() => createRng(), [])
   const recentSigs = useRef<string[]>([])
   const startedAt = useRef(0)
   const storeRef = useRef(store)
-  storeRef.current = store
+  useEffect(() => {
+    storeRef.current = store
+  }, [store])
 
-  const nextProblem = useCallback((): Problem => {
-    const s = storeRef.current
-    const override = onlyTypeWeights(only)
-    const settings = override ? { ...s.settings, typeWeights: override } : s.settings
-    const p = pickNext({ attempts: s.attempts, settings, recentSigs: recentSigs.current, rng })
-    recentSigs.current = [...recentSigs.current, p.signature].slice(-10)
+  const nextProblem = useCallback(
+    (s: Store, recent: string[]): Problem => {
+      const override = onlyTypeWeights(only)
+      const settings = override ? { ...s.settings, typeWeights: override } : s.settings
+      return pickNext({ attempts: s.attempts, settings, recentSigs: recent, rng })
+    },
+    [rng, only],
+  )
+
+  const [problem, setProblem] = useState<Problem>(() => nextProblem(store, []))
+  // Remember what was served (to avoid repeats) and when it appeared (to time the answer).
+  useEffect(() => {
+    recentSigs.current = [...recentSigs.current, problem.signature].slice(-10)
     startedAt.current = performance.now()
-    return p
-  }, [rng, only])
-
-  const [problem, setProblem] = useState<Problem>(nextProblem)
+  }, [problem])
   const [stepIndex, setStepIndex] = useState(0)
   const [input, setInputState] = useState('')
   // Mirror of `input` that updates synchronously, so fast key sequences (digit then Enter) see the latest value.
@@ -60,12 +61,12 @@ export function SessionView({ only }: { only?: CardType | null }) {
   const advance = useCallback(() => {
     if (timer.current) clearTimeout(timer.current)
     timer.current = null
-    setProblem(nextProblem())
+    setProblem(nextProblem(storeRef.current, recentSigs.current))
     setStepIndex(0)
     setInput('')
     setResults([])
     setPhase('answering')
-  }, [nextProblem])
+  }, [nextProblem, setInput])
 
   useEffect(() => () => { if (timer.current) clearTimeout(timer.current) }, [])
 
@@ -115,7 +116,7 @@ export function SessionView({ only }: { only?: CardType | null }) {
         timer.current = setTimeout(goOn, REVEAL_MS)
       }
     },
-    [problem, stepIndex, results, finish],
+    [problem, stepIndex, results, finish, setInput],
   )
 
   const onKey = useCallback(

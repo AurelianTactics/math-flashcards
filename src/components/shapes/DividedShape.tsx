@@ -27,19 +27,18 @@ export function DividedShape({
   if (shape === 'rect') {
     const w = size * 1.3
     const h = size * 0.8
-    let x = 0
+    const starts = cumulative(fractions.map((f) => f * w))
     return (
       <svg width={w + 4} height={h + 4} viewBox={`-2 -2 ${w + 4} ${h + 4}`} role="img" aria-label={`rectangle in ${pieces} ${equal ? 'equal' : 'unequal'} pieces`}>
         {fractions.map((f, i) => {
           const pw = f * w
-          const el = (
+          const x = starts[i]
+          return (
             <g key={i}>
               <rect x={x} y={0} width={pw} height={h} fill={fill(i)} stroke="var(--ink)" strokeWidth={3} />
               {numbered && <text x={x + pw / 2} y={h / 2 + 8} textAnchor="middle" fontSize={22} fontWeight={600} fill="var(--ink)">{i + 1}</text>}
             </g>
           )
-          x += pw
-          return el
         })}
       </svg>
     )
@@ -47,11 +46,10 @@ export function DividedShape({
 
   const r = size / 2
   const c = r + 2
-  let angle = -Math.PI / 2
+  const startAngles = cumulative(fractions.map((f) => f * Math.PI * 2)).map((a) => a - Math.PI / 2)
   const sectors = fractions.map((f, i) => {
-    const start = angle
-    const end = angle + f * Math.PI * 2
-    angle = end
+    const start = startAngles[i]
+    const end = start + f * Math.PI * 2
     const large = f > 0.5 ? 1 : 0
     const x1 = c + r * Math.cos(start)
     const y1 = c + r * Math.sin(start)
@@ -72,6 +70,17 @@ export function DividedShape({
       ))}
     </svg>
   )
+}
+
+/** Running offsets: [0, a0, a0+a1, ...] with the same length as the input. */
+function cumulative(sizes: number[]): number[] {
+  const out: number[] = []
+  let acc = 0
+  for (const v of sizes) {
+    out.push(acc)
+    acc += v
+  }
+  return out
 }
 
 function unevenFractions(n: number): number[] {

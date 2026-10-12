@@ -12,7 +12,9 @@ export type KeyEvent =
  */
 export function useKeyboard(handler: (e: KeyEvent) => void, active = true) {
   const ref = useRef(handler)
-  ref.current = handler
+  useEffect(() => {
+    ref.current = handler
+  })
   useEffect(() => {
     if (!active) return
     const onKey = (ev: KeyboardEvent) => {
