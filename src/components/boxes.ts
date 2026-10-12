@@ -4,6 +4,8 @@ export type BoxState = 'pending' | 'active' | 'correct' | 'wrong'
 export interface BoxView {
   state: BoxState
   text: string
+  /** What was actually given when it differs from text (wrong answers). */
+  given?: string
 }
 export type Boxes = Partial<Record<StepId, BoxView>>
 
@@ -17,9 +19,9 @@ export function boxViews(problem: Problem, stepIndex: number, input: string, res
     const expected = step.kind === 'digits' ? step.expected : String(step.expected)
     if (i < stepIndex) {
       const r = results[i]
-      out[step.id] = { state: r && !r.firstTry ? 'wrong' : 'correct', text: expected }
+      out[step.id] = { state: r && !r.firstTry ? 'wrong' : 'correct', text: expected, given: r?.given }
     } else if (i === stepIndex) {
-      out[step.id] = revealing ? { state: 'wrong', text: expected } : { state: 'active', text: input }
+      out[step.id] = revealing ? { state: 'wrong', text: expected, given: input } : { state: 'active', text: input }
     } else {
       out[step.id] = { state: 'pending', text: '' }
     }

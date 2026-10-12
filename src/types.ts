@@ -43,6 +43,8 @@ export interface ChoiceOption {
   key: string
   /** Text label shown on the button (optional when a picture is rendered). */
   label?: string
+  /** Extra keys that also select this option (e.g. '<' for the "less than" choice). */
+  altKeys?: string[]
   /** Opaque payload the card renderer can use to draw a picture option. */
   value: string
 }
@@ -76,13 +78,13 @@ export type CompareSymbol = '<' | '>' | '=' | '!='
 export type ProblemData =
   | { type: 'add'; a: number; b: number }
   | { type: 'sub'; a: number; b: number }
-  | { type: 'compare'; left: Expr; right: Expr; answer: CompareSymbol }
+  | { type: 'compare'; left: Expr; right: Expr; answer: CompareSymbol; mode: 'ltgt' | 'eqne' }
   | {
       type: 'fraction'
       pieces: 2 | 3 | 4
       shape: 'circle' | 'rect'
-      mode: 'pickCorrect' | 'countPieces'
-      /** For pickCorrect: the candidate pictures; value encodes pieces + whether equal. */
+      mode: 'pickCorrect' | 'countPieces' | 'name'
+      /** For pickCorrect: the candidate pictures. */
       options?: { pieces: number; equal: boolean }[]
     }
   | { type: 'sequence'; items: (number | null)[]; step: number; dir: 'fwd' | 'back'; answer: number }
@@ -153,6 +155,8 @@ export interface StepResult {
   id: StepId
   tries: number
   firstTry: boolean
+  /** What was typed or chosen (digits, or option index for choices). */
+  given?: string
 }
 
 export interface Attempt {

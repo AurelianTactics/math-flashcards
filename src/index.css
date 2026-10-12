@@ -144,3 +144,54 @@ button:focus-visible, .tab:focus-visible { outline: 3px solid var(--blue); outli
 @media (prefers-reduced-motion: reduce) {
   .shake, .caret { animation: none; }
 }
+
+/* Choices (press the key or click) */
+.choices { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+.choice {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  border: 3px solid var(--grid); background: #fff; border-radius: var(--radius);
+  padding: 10px 18px 12px; cursor: pointer; min-width: 92px;
+  font-size: 1.5rem; font-weight: 600;
+}
+.choices-big .choice { font-size: 2.6rem; padding: 10px 22px 14px; }
+.choice:hover:not(:disabled) { border-color: var(--marigold); background: var(--marigold-soft); }
+.choice:disabled { cursor: default; }
+.choice-right { border-color: var(--teal); background: var(--teal-soft); }
+.choice-wrong { border-color: var(--wrong); background: var(--wrong-soft); }
+.choice-key {
+  font-size: 0.85rem; font-weight: 600; color: var(--ink-soft);
+  border: 2px solid var(--grid); border-radius: 6px; padding: 0 7px; line-height: 1.4;
+}
+.choice-body { display: flex; align-items: center; justify-content: center; }
+
+/* Comparison */
+.compare-card { display: flex; flex-direction: column; align-items: center; gap: 24px; }
+.compare-slot { min-width: 1.2em; color: var(--ink-soft); }
+
+/* Sequence */
+.seq { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 6px; font-size: 3.6rem; font-weight: 600; line-height: 1; }
+.seq-item { display: inline-flex; align-items: center; gap: 6px; }
+.seq-tile { display: inline-flex; align-items: center; justify-content: center; min-width: 1.4em; padding: 0.1em 0.2em; }
+.seq-comma { color: var(--ink-soft); font-weight: 400; }
+.seq-explain { font-size: 2.4rem; }
+.seq-tile-answer { background: var(--teal-soft); border-radius: 0.18em; color: var(--ink); }
+.seq-hop { font-size: 1rem; color: var(--blue); font-weight: 700; align-self: flex-start; }
+
+/* Number line, grid, fractions */
+.line-card, .fraction-card { display: flex; flex-direction: column; align-items: center; gap: 18px; width: 100%; }
+.line-answer { font-size: 4rem; }
+.grid-card { display: flex; align-items: center; gap: 36px; flex-wrap: wrap; justify-content: center; }
+.grid-answer { font-size: 3.4rem; }
+
+/* Compare explanation bars */
+.bars { width: 100%; max-width: 480px; display: flex; flex-direction: column; gap: 12px; }
+.bar-row { display: grid; grid-template-columns: 7em 1fr; align-items: center; gap: 10px; }
+.bar-label { text-align: right; font-weight: 600; }
+.bar { display: block; height: 28px; border-radius: 6px; border: 2px solid rgba(31, 42, 68, 0.2); }
+
+/* Part-whole bar */
+.partwhole { width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 6px; font-weight: 600; font-size: 1.5rem; }
+.pw-whole { background: var(--ink); color: #fff; border-radius: 8px; text-align: center; padding: 8px; }
+.pw-parts { display: flex; gap: 6px; }
+.pw-part { color: #fff; border-radius: 8px; text-align: center; padding: 8px; min-width: 2.5em; }
+.pw-unknown { outline: 4px solid var(--marigold); outline-offset: 2px; }

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import type { Problem, StepResult } from '../types'
+import { CARD_TYPES, type CardType, type Problem, type Settings, type StepResult } from '../types'
 import { useStore } from '../hooks/useStore'
 import { useKeyboard, type KeyEvent } from '../hooks/useKeyboard'
 import { createRng } from '../rng'
@@ -17,7 +17,13 @@ type Phase = 'answering' | 'revealing' | 'correct' | 'wrong'
 const REVEAL_MS = 900
 const CORRECT_MS = 1400
 
-export function SessionView() {
+/** Optional focus on one card type, e.g. from the practice picker or ?only=compare. */
+export function onlyTypeWeights(only: CardType | null | undefined): Settings['typeWeights'] | undefined {
+  if (!only || !CARD_TYPES.includes(only)) return undefined
+  return Object.fromEntries(CARD_TYPES.map((t) => [t, t === only ? 1 : 0])) as Settings['typeWeights']
+}
+
+export function SessionView({ only }: { only?: CardType | null }) {
   const { store, sessionId, appendAttempt } = useStore()
   const rng = useMemo(() => createRng(), [])
   const recentSigs = useRef<string[]>([])
@@ -27,15 +33,23 @@ export function SessionView() {
 
   const nextProblem = useCallback((): Problem => {
     const s = storeRef.current
-    const p = pickNext({ attempts: s.attempts, settings: s.settings, recentSigs: recentSigs.current, rng })
+    const override = onlyTypeWeights(only)
+    const settings = override ? { ...s.settings, typeWeights: override } : s.settings
+    const p = pickNext({ attempts: s.attempts, settings, recentSigs: recentSigs.current, rng })
     recentSigs.current = [...recentSigs.current, p.signature].slice(-10)
     startedAt.current = performance.now()
     return p
-  }, [rng])
+  }, [rng, only])
 
   const [problem, setProblem] = useState<Problem>(nextProblem)
   const [stepIndex, setStepIndex] = useState(0)
-  const [input, setInput] = useState('')
+  const [input, setInputState] = useState('')
+  // Mirror of `input` that updates synchronously, so fast key sequences (digit then Enter) see the latest value.
+  const inputRef = useRef('')
+  const setInput = useCallback((v: string | ((prev: string) => string)) => {
+    inputRef.current = typeof v === 'function' ? v(inputRef.current) : v
+    setInputState(inputRef.current)
+  }, [])
   const [results, setResults] = useState<StepResult[]>([])
   const [phase, setPhase] = useState<Phase>('answering')
   const [burst, setBurst] = useState(0)
@@ -79,7 +93,7 @@ export function SessionView() {
       const step = problem.steps[stepIndex]
       if (!step) return
       const ok = checkStep(step, value)
-      const result: StepResult = { id: step.id, tries: 1, firstTry: ok }
+      const result: StepResult = { id: step.id, tries: 1, firstTry: ok, given: String(value) }
       const all = [...results, result]
       const last = stepIndex === problem.steps.length - 1
       const goOn = () => {
@@ -96,6 +110,7 @@ export function SessionView() {
       } else {
         playWrong()
         setShake((s) => s + 1)
+        setInput(String(value))
         setPhase('revealing')
         timer.current = setTimeout(goOn, REVEAL_MS)
       }
@@ -114,32 +129,40 @@ export function SessionView() {
       const step = problem.steps[stepIndex]
       if (!step) return
       if (step.kind === 'digits') {
+        const cur = inputRef.current
         if (e.kind === 'digit') {
-          if (input.length >= step.maxLen) return
-          const next = input + e.digit
+          if (cur.length >= step.maxLen) return
+          const next = cur + e.digit
           playTick()
           setInput(next)
           if (step.autoSubmit && next.length >= step.maxLen) submit(next)
         } else if (e.kind === 'backspace') {
           setInput((v) => v.slice(0, -1))
         } else if (e.kind === 'enter') {
-          if (input.length > 0) submit(input)
+          if (cur.length > 0) submit(cur)
         }
       } else if (step.kind === 'choice') {
         const key = e.kind === 'digit' ? e.digit : e.kind === 'char' ? e.char : null
         if (!key) return
-        const idx = step.options.findIndex((o) => o.key === key)
+        const idx = step.options.findIndex((o) => o.key === key || o.altKeys?.includes(key))
         if (idx >= 0) submit(idx)
       }
     },
-    [phase, problem, stepIndex, input, submit, advance],
+    [phase, problem, stepIndex, submit, advance, setInput],
   )
   useKeyboard(onKey)
 
   const boxes = boxViews(problem, stepIndex, input, results, phase === 'revealing')
   const step = problem.steps[stepIndex]
   const op = problem.data.type === 'sub' ? '-' : '+'
-  const hint = phase === 'answering' && step ? stepHint(step, op) : phase === 'revealing' ? 'Not quite. This box should be:' : ''
+  const hint =
+    phase === 'answering' && step
+      ? stepHint(step, op)
+      : phase === 'revealing'
+        ? step?.kind === 'choice'
+          ? 'Not quite. The right one is marked.'
+          : 'Not quite. This box should be:'
+        : ''
 
   return (
     <div className="session">
@@ -155,7 +178,7 @@ export function SessionView() {
           <>
             {problem.prompt && <p className="prompt">{problem.prompt}</p>}
             <div className={`card-body${shake ? ' shake' : ''}`} key={shake}>
-              <ProblemCard problem={problem} boxes={boxes} />
+              <ProblemCard problem={problem} boxes={boxes} onChoose={(idx) => phase === 'answering' && submit(idx)} />
             </div>
             <p className="hint">{hint}</p>
           </>

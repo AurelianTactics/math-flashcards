@@ -66,6 +66,8 @@ export function needsColumnMode(op: Op, a: number, b: number, rng: Rng, settings
   const twoDigit = (n: number) => n >= 10
   // Single-digit problems (including 7 + 3 = 10 and 8 + 5 = 13) are answered whole, never in columns.
   if (!twoDigit(a) && !twoDigit(b)) return false
+  // Results within 10 (10 + 0, 10 - 10) are not column problems either.
+  if (op === '+' ? a + b <= 10 : a <= 10) return false
   if (op === '+' && hasCarry(a, b)) return true
   if (op === '-' && hasBorrow(a, b)) return true
   if (settings.columnMode === 'always2digit') return true

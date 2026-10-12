@@ -1,11 +1,13 @@
 import { useState } from 'react'
 import { StoreProvider } from './hooks/useStore'
 import { SessionView } from './components/SessionView'
+import type { CardType } from './types'
 
 type View = 'play' | 'stats' | 'settings'
 
 export default function App() {
   const [view, setView] = useState<View>('play')
+  const only = (new URLSearchParams(window.location.search).get('only') as CardType | null) ?? null
   return (
     <StoreProvider>
       <div className="app">
@@ -26,7 +28,7 @@ export default function App() {
           </div>
         </nav>
         <main className="main">
-          {view === 'play' && <SessionView />}
+          {view === 'play' && <SessionView only={only} />}
           {view === 'stats' && <p className="soon">Progress page is coming next.</p>}
           {view === 'settings' && <p className="soon">Settings are coming next.</p>}
         </main>

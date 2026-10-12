@@ -2,6 +2,7 @@ import { pickNext, availableTypes } from './scheduler'
 import { createRng } from '../rng'
 import { DEFAULT_SETTINGS } from '../storage/schema'
 import { bucketStats } from '../skills/stats'
+import { bucketDef } from '../skills/buckets'
 import type { Attempt } from '../types'
 
 const mk = (sig: string, bucket: string, correct: boolean, ts: number, type: 'add' | 'sub' = 'add'): Attempt => ({
@@ -25,8 +26,8 @@ describe('pickNext', () => {
   it('only serves unlocked (tier 1) buckets with no history', () => {
     const rng = createRng(2)
     for (let i = 0; i < 500; i++) {
-      const p = pickNext({ attempts: [], settings: { ...DEFAULT_SETTINGS, typeWeights: { add: 1, sub: 1 } }, recentSigs: [], rng })
-      expect(['add.within5', 'sub.within5']).toContain(p.buckets[0])
+      const p = pickNext({ attempts: [], settings: DEFAULT_SETTINGS, recentSigs: [], rng })
+      expect(bucketDef(p.buckets[0])?.tier).toBe(1)
     }
   })
   it('gives mastered buckets ~25% once others are unlocked', () => {

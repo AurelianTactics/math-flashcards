@@ -3,10 +3,22 @@ import type { Rng } from '../rng'
 import type { Generator } from './types'
 import { additionGenerator } from './addition'
 import { subtractionGenerator } from './subtraction'
+import { comparisonGenerator } from './comparison'
+import { fractionGenerator } from './fractions'
+import { sequenceGenerator } from './sequences'
+import { numberLineGenerator } from './numberLine'
+import { numberGridGenerator } from './numberGrid'
+import { missingGenerator } from './missingNumber'
 
 export const GENERATORS: Partial<Record<CardType, Generator>> = {
   add: additionGenerator,
   sub: subtractionGenerator,
+  compare: comparisonGenerator,
+  fraction: fractionGenerator,
+  sequence: sequenceGenerator,
+  numberLine: numberLineGenerator,
+  numberGrid: numberGridGenerator,
+  missing: missingGenerator,
 }
 
 export function generatorForBucket(bucket: BucketId): Generator | undefined {
